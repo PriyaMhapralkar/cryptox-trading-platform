@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<body>
+<button id="pay">Pay ₹500</button>
+<script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+<script>
+document.getElementById('pay').onclick = function() {
+    var options = {
+        "key": "rzp_test_TF3pyWMyj3SRRW", // your test Key ID
+        "amount": "50000",
+        "currency": "INR",
+        "name": "CryptoX",
+        "order_id": "order_TF5vXIZW6ph4S9", // the order id you just got
+        "handler": function (response) {
+            document.body.innerHTML = "<pre>" + JSON.stringify(response, null, 2) + "</pre>";
+        }
+    };
+    var rzp = new Razorpay(options);
+    rzp.open();
+};
+</script>
+</body>
+</html>
