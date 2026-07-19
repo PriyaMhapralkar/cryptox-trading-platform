@@ -26,4 +26,13 @@ public class AuthController {
     public AuthResponse verifyOtp(@RequestBody VerifyOtpRequest request) {
         return authService.verifyLoginOtp(request);
     }
+    @PostMapping("/forgot-password")
+    public String forgotPassword(@RequestBody ForgotPasswordRequest request) {
+        return authService.forgotPassword(request.getEmail());
+    }
+
+    @PostMapping("/reset-password")
+    public String resetPassword(@RequestBody ResetPasswordRequest request) {
+        return authService.resetPassword(request);
+    }
 }

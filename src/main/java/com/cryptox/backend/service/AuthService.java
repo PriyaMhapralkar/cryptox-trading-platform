@@ -1,6 +1,8 @@
 package com.cryptox.backend.service;
 
 import com.cryptox.backend.dto.*;
+import com.cryptox.backend.dto.ResetPasswordRequest;
+import org.springframework.transaction.annotation.Transactional;
 import com.cryptox.backend.entity.*;
 import com.cryptox.backend.repository.UserRepository;
 import com.cryptox.backend.repository.WalletRepository;
@@ -74,5 +76,29 @@ public class AuthService {
 
         String token = jwtUtil.generateToken(user.getEmail());
         return new AuthResponse("Login successful (2FA verified)", token, false, "SUCCESS");
+    }
+    public String forgotPassword(String email) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new RuntimeException("No account found with this email"));
+
+        otpService.generateAndSendOtp(user, VerificationType.FORGOT_PASSWORD);
+        return "OTP sent to your email for password reset";
+    }
+
+    @Transactional
+    public String resetPassword(ResetPasswordRequest request) {
+        User user = userRepository.findByEmail(request.getEmail())
+                .orElseThrow(() -> new RuntimeException("No account found with this email"));
+
+        otpService.verifyOtp(user, VerificationType.FORGOT_PASSWORD, request.getOtp());
+
+        if (request.getNewPassword() == null || request.getNewPassword().length() < 6) {
+            throw new RuntimeException("Password must be at least 6 characters");
+        }
+
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userRepository.save(user);
+
+        return "Password reset successful. You can now log in with your new password.";
     }
 }
