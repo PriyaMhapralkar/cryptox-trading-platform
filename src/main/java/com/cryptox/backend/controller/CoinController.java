@@ -45,4 +45,8 @@ public class CoinController {
             @RequestParam(defaultValue = "1") String days) {
         return coinService.getCoinChart(coinId, days);
     }
+    @GetMapping("/count")
+    public long getCoinCount() {
+        return coinService.getTotalCoinCount();
+    }
 }

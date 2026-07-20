@@ -126,6 +126,9 @@ public class CoinService {
         return coinRepository.findByCoinId(coinId)
                 .orElseThrow(() -> new RuntimeException("Coin not found: " + coinId));
     }
+    public long getTotalCoinCount() {
+        return coinRepository.count();
+    }
 
     public List<Coin> searchCoins(String query) {
         return coinRepository.findAll().stream()

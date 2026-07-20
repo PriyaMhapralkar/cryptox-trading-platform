@@ -40,12 +40,21 @@ public class ChatService {
         List<Coin> allCoins = coinRepository.findAll();
 
         Optional<Coin> matched = allCoins.stream()
-                .filter(c -> lowerMsg.contains(c.getName().toLowerCase())
-                        || lowerMsg.contains(c.getSymbol().toLowerCase()))
+                .filter(c -> {
+                    String name = c.getName().toLowerCase();
+                    String symbol = c.getSymbol().toLowerCase();
+
+                    boolean nameMatch = containsWholeWord(lowerMsg, name);
+                    // Skip symbol matching entirely for very short/common symbols (1-2 chars)
+                    // to avoid false positives like "m" matching "market"
+                    boolean symbolMatch = symbol.length() >= 3 && containsWholeWord(lowerMsg, symbol);
+
+                    return nameMatch || symbolMatch;
+                })
                 .findFirst();
 
         if (matched.isEmpty()) {
-            return ""; // no specific coin mentioned — let Gemini answer generally
+            return "";
         }
 
         Coin coin = matched.get();
@@ -59,6 +68,14 @@ public class ChatService {
                 coin.getHigh24h(), coin.getLow24h()
         );
     }
+
+    private boolean containsWholeWord(String text, String word) {
+        // \b = word boundary, so "eth" won't match inside "method" or "wealth"
+        return java.util.regex.Pattern.compile("\\b" + java.util.regex.Pattern.quote(word) + "\\b")
+                .matcher(text)
+                .find();
+    }
+    
 
     private String buildPrompt(String userMessage, String marketContext) {
         StringBuilder prompt = new StringBuilder();

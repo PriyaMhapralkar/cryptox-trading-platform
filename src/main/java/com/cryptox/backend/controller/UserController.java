@@ -21,6 +21,12 @@ public class UserController {
         userRepository.save(user);
         return "Two-factor authentication enabled";
     }
+    
+    @GetMapping("/profile")
+    public User getProfile(Authentication authentication) {
+        return userRepository.findByEmail(authentication.getName())
+                .orElseThrow(() -> new RuntimeException("User not found"));
+    }
 
     @PostMapping("/disable-2fa")
     public String disable2fa(Authentication authentication) {
