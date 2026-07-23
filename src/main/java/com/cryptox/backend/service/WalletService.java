@@ -16,6 +16,7 @@ public class WalletService {
     @Autowired private WalletRepository walletRepository;
     @Autowired private WalletTransactionRepository walletTransactionRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private AuditLogService auditLogService;
 
     public Wallet getWalletByUserId(Long userId) {
         Wallet wallet = walletRepository.findByUserId(userId);
@@ -42,6 +43,8 @@ public class WalletService {
                 .amount(amount)
                 .build();
         walletTransactionRepository.save(txn);
+        auditLogService.log(wallet.getUser(), "ADD_BALANCE", "SUCCESS",
+                "Added $" + amount + " to wallet");
 
         return wallet;
     }
@@ -91,6 +94,10 @@ public class WalletService {
                 .purpose(purpose)
                 .amount(amount)
                 .build());
+        auditLogService.log(fromWallet.getUser(), "TRANSFER", "SUCCESS",
+                "Transferred $" + amount + " to " + toUserEmail);
+        
+        
     }
 
     // Used internally by OrderService — debits/credits wallet during buy/sell

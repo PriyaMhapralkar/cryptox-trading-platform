@@ -18,6 +18,7 @@ public class WithdrawalService {
     @Autowired private WalletRepository walletRepository;
     @Autowired private WalletTransactionRepository walletTransactionRepository;
     @Autowired private PaymentDetailsRepository paymentDetailsRepository;
+    @Autowired private AuditLogService auditLogService; 
 
     @Transactional
     public Withdrawal requestWithdrawal(User user, BigDecimal amount) {
@@ -56,6 +57,9 @@ public class WithdrawalService {
                 .user(user)
                 .date(LocalDateTime.now())
                 .build();
+        
+        auditLogService.log(user, "WITHDRAWAL_REQUEST", "SUCCESS",
+                "Requested withdrawal of $" + amount); 
 
         return withdrawalRepository.save(withdrawal);
     }
@@ -99,8 +103,12 @@ public class WithdrawalService {
                     .purpose("Withdrawal declined — refund")
                     .amount(withdrawal.getAmount())
                     .build());
+            
+            auditLogService.log(withdrawal.getUser(), "WITHDRAWAL_DECLINED", "SUCCESS",
+                    "Withdrawal #" + withdrawal.getId() + " declined by admin, refunded"); 
         }
 
         return withdrawalRepository.save(withdrawal);
+        
     }
 }

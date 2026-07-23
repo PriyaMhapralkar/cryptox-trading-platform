@@ -22,6 +22,8 @@ public class AuthService {
     @Autowired private AuthenticationManager authenticationManager;
     @Autowired private JwtUtil jwtUtil;
     @Autowired private OtpService otpService;
+    @Autowired private AuditLogService auditLogService;
+
 
     public AuthResponse register(RegisterRequest request) {
         if (userRepository.findByEmail(request.getEmail()).isPresent()) {
@@ -47,6 +49,8 @@ public class AuthService {
                 .balance(BigDecimal.ZERO)
                 .build();
         walletRepository.save(wallet);
+        
+        auditLogService.log(savedUser, "REGISTER", "SUCCESS", "New account created");
 
         String token = jwtUtil.generateToken(savedUser.getEmail());
         return new AuthResponse("Registered successfully", token, false, "SUCCESS");
@@ -59,6 +63,9 @@ public class AuthService {
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(request.getEmail(), request.getPassword())
         );
+        if ("BLOCKED".equals(user.getStatus())) {
+            throw new RuntimeException("Your account has been blocked. Please contact support.");
+        }
 
         if (user.isTwoFactorAuthEnabled()) {
             otpService.generateAndSendOtp(user, VerificationType.LOGIN_2FA);
@@ -66,6 +73,7 @@ public class AuthService {
         }
 
         String token = jwtUtil.generateToken(user.getEmail());
+        auditLogService.log(user, "LOGIN", "SUCCESS", "User logged in");
         return new AuthResponse("Login successful", token, false, "SUCCESS");
     }
     public AuthResponse verifyLoginOtp(VerifyOtpRequest request) {
