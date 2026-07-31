@@ -1,7 +1,11 @@
 package com.cryptox.backend.controller;
 
+import com.cryptox.backend.dto.NewsItem;
 import com.cryptox.backend.entity.Coin;
+import com.cryptox.backend.service.CoinInsightService;
 import com.cryptox.backend.service.CoinService;
+import com.cryptox.backend.service.NewsService;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -14,6 +18,8 @@ public class CoinController {
 
     @Autowired
     private CoinService coinService;
+    @Autowired private NewsService newsService;
+    @Autowired private CoinInsightService coinInsightService;
 
     @GetMapping
     public List<Coin> getCoins(
@@ -48,5 +54,19 @@ public class CoinController {
     @GetMapping("/count")
     public long getCoinCount() {
         return coinService.getTotalCoinCount();
+    }
+    
+    @GetMapping("/{coinId}/news")
+    public List<NewsItem> getCoinNews(@PathVariable String coinId) {
+        Coin coin = coinService.getCoinById(coinId);
+        return newsService.getNewsForCoin(coin.getName(), coin.getSymbol());
+    }
+
+    @GetMapping("/{coinId}/insight")
+    public Map<String, String> getCoinInsight(@PathVariable String coinId) {
+        Coin coin = coinService.getCoinById(coinId);
+        List<NewsItem> news = newsService.getNewsForCoin(coin.getName(), coin.getSymbol());
+        String insight = coinInsightService.generateInsight(coin, news);
+        return Map.of("insight", insight);
     }
 }
